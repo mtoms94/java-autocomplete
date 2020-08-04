@@ -71,28 +71,39 @@ const printConstructorSuggestions = (className) => {
     className
   );
 
-  console.log("-".repeat(50));
-  console.log(className);
+  console.log("-".repeat(100));
   suggestions.forEach((suggestion) => {
     console.log(suggestion.name);
   });
-  console.log("-".repeat(50));
+  console.log("-".repeat(100));
 };
 
-const printClassSuggestions = (toPrint) => {
+const getClassSuggestions = async (toPrint) => {
   let suggestions;
-  // trie search fails with empty string so grab all methods directly from classobj
+  const classObj = this.trieMap.search("class", toPrint.class)[0];
   if (toPrint.prefix == "") {
-    suggestions = this.trieMap.search("class", toPrint.class)[0].methods;
+    suggestions = classObj.methods; //trie search fails with empty string so grab all methods directly from classobj
   } else {
     suggestions = this.trieMap.search(
       toPrint.class + ":methods",
       toPrint.prefix
     );
   }
-  //TODO: write note about inheritance?
-  console.log("-".repeat(50));
-  console.log(toPrint);
+  // recursively add inherited methods
+  if (classObj.extends != toPrint.class) {
+    suggestions = suggestions.concat(
+      await getClassSuggestions({
+        class: classObj.extends,
+        prefix: toPrint.prefix,
+      })
+    );
+  }
+  return suggestions;
+};
+
+const printClassSuggestions = async (toPrint) => {
+  const suggestions = await getClassSuggestions(toPrint);
+  console.log("-".repeat(100));
   suggestions.forEach((suggestion) => {
     const offset =
       50 - suggestion.name.length > 0 ? 50 - suggestion.name.length : 0;
@@ -103,7 +114,7 @@ const printClassSuggestions = (toPrint) => {
       suggestion.returnType
     );
   });
-  console.log("-".repeat(50));
+  console.log("-".repeat(100));
 };
 
 const handler = async () => {

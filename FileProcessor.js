@@ -5,7 +5,12 @@ const fs = require("fs").promises;
 const parser = new Parser();
 parser.setLanguage(Java);
 
-const javaBasicAnnotationTypes = ["Deprecated", "Override", "SuppressWarnings"];
+const javaBasicAnnotationTypes = [
+  "Deprecated",
+  "Override",
+  "SuppressWarnings",
+  "HotSpotIntrinsicCandidate",
+];
 const javaDirectory = "java-standard-library";
 this.trieMap = new TrieMap();
 
@@ -48,7 +53,7 @@ const processFile = async (fileName) => {
             .descendantsOfType("modifiers")[0]
             .children.map((modifier) => modifier.type),
           description: "",
-          extends: "",
+          extends: "Object", //Extension: update this with actual inheritance
           constructors: [],
           methods: [],
         };
