@@ -2,7 +2,7 @@
 
 ## Intro
 
-For this project I decided to focus on the two parts of code completion programs that I find myself using the most: method suggestions and constructor parameter options.
+This is a mini Java autocomplete program built using the NodeJs binding for the Tree-sitter parsing library. For this project I decided to focus on the two parts of code completion programs that I find myself using the most: method suggestions and constructor parameter options.
 
 ## Installation and Examples
 
