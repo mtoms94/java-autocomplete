@@ -45,20 +45,18 @@ const processConstructors = (args) => {
   args.classBodyNode
     .descendantsOfType("constructor_declaration")
     .forEach((constructorNode) => {
-      const constructorObj = {
-        name: "",
-        class: args.className,
-        parameters: "",
-      };
-      let params = "";
+      let parameters = "";
       constructorNode
         .descendantsOfType("formal_parameters")[0]
         .children.forEach((param) => {
-          params += param.text.concat(" ");
+          parameters += param.text.concat(" ");
         });
-      params = params.trim();
-      constructorObj.parameters = params;
-      constructorObj.name = args.className + params;
+      parameters = parameters.trim();
+      const constructorObj = {
+        name: args.className + parameters,
+        class: args.className,
+        parameters,
+      };
       this.trieMap.add(args.className + ":constructors", constructorObj);
       constructors.push(constructorObj);
     });
@@ -71,11 +69,6 @@ const processMethods = (args) => {
     .descendantsOfType("method_declaration")
     .forEach((methodNode) => {
       if (isPublic(methodNode) && !isStatic(methodNode)) {
-        const methodObj = {
-          name: "",
-          returnType: "",
-          params: "",
-        };
         //skip over all annotations like @Override
         let i = 0;
         while (
@@ -85,8 +78,7 @@ const processMethods = (args) => {
         ) {
           i++;
         }
-        methodObj.name = methodNode.descendantsOfType("identifier")[i].text;
-
+        const name = methodNode.descendantsOfType("identifier")[i].text;
         let returnType = "";
         returnType = methodNode.descendantsOfType("type_identifier")[0]
           ? methodNode.descendantsOfType("type_identifier")[0].text
@@ -97,15 +89,17 @@ const processMethods = (args) => {
         returnType = methodNode.descendantsOfType("boolean_type")[0]
           ? methodNode.descendantsOfType("boolean_type")[0].text
           : returnType;
-        methodObj.returnType = returnType;
         let params = "";
         methodNode
           .descendantsOfType("formal_parameters")[0]
           .children.forEach((param) => {
             params += param.text.concat(" ");
           });
-        methodObj.params = params;
-        methodObj.name += methodObj.params; //keeping parameters in the name ensures each method has a unique key in the trie.
+        const methodObj = {
+          name: name + params, //keeping parameters in the name ensures each method has a unique key in the trie.
+          returnType,
+          params,
+        };
         methods.push(methodObj);
         this.trieMap.add(args.className + ":methods", methodObj);
       }
@@ -120,25 +114,26 @@ const processFile = async (fileName) => {
     .descendantsOfType("class_declaration")
     .forEach((classNode) => {
       if (isPublic(classNode)) {
-        const classObj = {
-          name: classNode.descendantsOfType("identifier")[0].text,
-          scope: classNode
-            .descendantsOfType("modifiers")[0]
-            .children.map((modifier) => modifier.type),
-          description: "",
-          extends: "Object", //Extension: update this with actual inheritance
-          constructors: [],
-          methods: [],
-        };
+        const name = classNode.descendantsOfType("identifier")[0].text;
+        const scope = classNode
+          .descendantsOfType("modifiers")[0]
+          .children.map((modifier) => modifier.type);
         const classBodyNode = classNode.descendantsOfType("class_body")[0];
-        classObj.constructors = processConstructors({
+        const constructors = processConstructors({
           classBodyNode,
-          className: classObj.name,
+          className: name,
         });
-        classObj.methods = processMethods({
+        const methods = processMethods({
           classBodyNode,
-          className: classObj.name,
+          className: name,
         });
+        const classObj = {
+          name,
+          scope,
+          extends: "Object", //Extension: update this with actual inheritance
+          constructors,
+          methods,
+        };
         this.trieMap.add("class", classObj);
       }
     });
