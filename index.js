@@ -3,10 +3,8 @@ const fileProcessor = require("./FileProcessor");
 const processCursorIndex = async (index) => {
   let cursorNode = this.tree.rootNode.descendantForIndex(index);
   let identifier = "";
-  while (index > 0) {
-    console.log("cursorNode of ", index, ":", cursorNode.text);
-    console.log("cursorNode of ", index, " type:", cursorNode.type);
-    console.log("cursorNode of ", index, ":", cursorNode);
+  const searchChars = index - 20;
+  while (index > searchChars) {
     switch (cursorNode.type) {
       case "identifier":
         identifier = cursorNode.text;
@@ -23,6 +21,7 @@ const processCursorIndex = async (index) => {
         printConstructorSuggestions(className);
         return;
       case ".":
+        //find available methods accessible to the object preceding "."
         const variableName = cursorNode.previousSibling.text;
         const methodNode = await findScope(cursorNode.previousSibling);
         methodNode
@@ -132,22 +131,6 @@ const handler = async () => {
   }
   this.tree = fileProcessor.tree;
   this.trieMap = fileProcessor.trieMap;
-  /* console.log(
-    "retrieval String:methods su ",
-    fileProcessor.trieMap.search("String:methods", "su")
-  ); */
-  console.log(
-    "retrieval Integer:methods s ",
-    fileProcessor.trieMap.search("Integer:methods", "s")
-  );
-  console.log(
-    "retrieval Object:methods e ",
-    fileProcessor.trieMap.search("Object:methods", "e")
-  );
-  console.log(
-    "retrieval SomeObject:methods ",
-    fileProcessor.trieMap.search("class", "SomeObject")[0].methods
-  );
   await processCursorIndex(Number(index.trim()));
 };
 handler();

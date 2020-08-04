@@ -64,7 +64,6 @@ const processFile = async (fileName) => {
             const constructorObj = {
               name: "",
               class: classObj.name,
-              extends: "Object", //extension: process inheritance correctly
               parameters: "",
             };
             let params = "";
@@ -76,7 +75,7 @@ const processFile = async (fileName) => {
             params = params.trim();
             constructorObj.parameters = params;
             constructorObj.name = classObj.name + params;
-            this.trieMap.add(classObj.name + ":constructors", constructorObj); //TODO: decide how i'm dealing with this
+            this.trieMap.add(classObj.name + ":constructors", constructorObj);
             classObj.constructors.push(constructorObj);
           });
         classBodyNode
@@ -120,13 +119,11 @@ const processFile = async (fileName) => {
                   params += param.text.concat(" ");
                 });
               methodObj.params = params;
-              methodObj.name += methodObj.params;
-              // console.log(classObj.name + ":methods", methodObj);
+              methodObj.name += methodObj.params; //keeping parameters in the name ensures each method has a unique key in the trie.
               classObj.methods.push(methodObj);
               this.trieMap.add(classObj.name + ":methods", methodObj);
             }
           });
-        console.log("new class: ", classObj);
         this.trieMap.add("class", classObj);
       }
     });
