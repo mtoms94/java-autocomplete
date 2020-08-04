@@ -6,7 +6,7 @@ For this project I decided to focus on the two parts of code completion programs
 
 ## Installation and Examples
 
-Assuming node is already installed (built with node v12.18.0);
+Assuming node is already installed (built with node v12.18.0).
 From the root directory:
 
 ```sh
