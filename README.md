@@ -6,7 +6,7 @@ For this project I decided to focus on the two parts of code completion programs
 
 ## Installation and Examples
 
-Assuming node is already installed (built with node v12.18.0);
+Assuming node is already installed (built with node v12.18.0).
 From the root directory:
 
 ```sh
@@ -90,5 +90,5 @@ subSequence( int beginIndex , int endIndex )        | return type:  int
 
 ## Process
 
-This program begins by loading in the Java standard classes. For the purposes of this project, I've just copied three in (Integer, Object, and String), but in the future the complete library could be pulled on from the host machine. For each file, java-autocomplete uses tree-sitter to identify the public classes (in order to simplify things I ignored more nuanced scope considerations in many places) and add them to a search-trie. Then within those classes, public, non-static methods are added to their own class-specific search trie (again to minimize the scope I did not process public variables). Finally, all public constructors are also added to a class-specific search trie. To maintain all of these tries, I created my own data structure to map each try to a relevant key.
-Once the standard libraries are processed, java-autocomplete processes the input file in the same way. Then the program uses tree-sitter to find the closest relevant node to the given index, falling into one of two categories: method or constructor suggestions. If no relevant node is found the program exits. The mapping of tries can now be used to efficiently find the relevant method or constructor.
+This program begins by loading in the Java standard classes. For the purposes of this project, I've just copied three in (Integer, Object, and String), but in the future the complete library could be pulled in from the host machine. For each file, java-autocomplete uses tree-sitter to identify the public classes (in order to simplify things I ignored more nuanced scope considerations in many places) and add them to a search-trie. Then within those classes, public, non-static methods are added to their own class-specific search trie (again to minimize the scope I did not process public variables). Finally, all public constructors are also added to a class-specific search trie. To maintain all of these tries, I created my own data structure to map each trie to a relevant key.
+Once the standard libraries are processed, java-autocomplete processes the input file in the same way. Then the program uses tree-sitter to find the closest relevant node to the given index, falling into one of two categories: method or constructor suggestions. If no relevant node is found the program exits. The mapping of tries can now be used to efficiently find the relevant methods or constructors.
