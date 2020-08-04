@@ -31,7 +31,6 @@ const processCursorIndex = async (index) => {
               declaration.descendantsOfType("identifier")[0].text ==
               variableName
             ) {
-              console.log(declaration.previousSibling);
               let variableType;
               if (declaration.descendantsOfType("type_identifier")[0]) {
                 variableType = declaration.descendantsOfType(

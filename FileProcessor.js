@@ -40,6 +40,79 @@ const isStatic = (memberNode) => {
   return false;
 };
 
+const processConstructors = (args) => {
+  let constructors = [];
+  args.classBodyNode
+    .descendantsOfType("constructor_declaration")
+    .forEach((constructorNode) => {
+      const constructorObj = {
+        name: "",
+        class: args.className,
+        parameters: "",
+      };
+      let params = "";
+      constructorNode
+        .descendantsOfType("formal_parameters")[0]
+        .children.forEach((param) => {
+          params += param.text.concat(" ");
+        });
+      params = params.trim();
+      constructorObj.parameters = params;
+      constructorObj.name = args.className + params;
+      this.trieMap.add(args.className + ":constructors", constructorObj);
+      constructors.push(constructorObj);
+    });
+  return constructors;
+};
+
+const processMethods = (args) => {
+  let methods = [];
+  args.classBodyNode
+    .descendantsOfType("method_declaration")
+    .forEach((methodNode) => {
+      if (isPublic(methodNode) && !isStatic(methodNode)) {
+        const methodObj = {
+          name: "",
+          returnType: "",
+          params: "",
+        };
+        //skip over all annotations like @Override
+        let i = 0;
+        while (
+          javaBasicAnnotationTypes.includes(
+            methodNode.descendantsOfType("identifier")[i].text
+          )
+        ) {
+          i++;
+        }
+        methodObj.name = methodNode.descendantsOfType("identifier")[i].text;
+
+        let returnType = "";
+        returnType = methodNode.descendantsOfType("type_identifier")[0]
+          ? methodNode.descendantsOfType("type_identifier")[0].text
+          : returnType;
+        returnType = methodNode.descendantsOfType("integral_type")[0]
+          ? methodNode.descendantsOfType("integral_type")[0].children[0].text
+          : returnType;
+        returnType = methodNode.descendantsOfType("boolean_type")[0]
+          ? methodNode.descendantsOfType("boolean_type")[0].text
+          : returnType;
+        methodObj.returnType = returnType;
+        let params = "";
+        methodNode
+          .descendantsOfType("formal_parameters")[0]
+          .children.forEach((param) => {
+            params += param.text.concat(" ");
+          });
+        methodObj.params = params;
+        methodObj.name += methodObj.params; //keeping parameters in the name ensures each method has a unique key in the trie.
+        methods.push(methodObj);
+        this.trieMap.add(args.className + ":methods", methodObj);
+      }
+    });
+  return methods;
+};
+
 const processFile = async (fileName) => {
   const text = await readFile(fileName);
   this.tree = await parser.parse(text); // Extension: update this to use background processes per docs
@@ -58,72 +131,14 @@ const processFile = async (fileName) => {
           methods: [],
         };
         const classBodyNode = classNode.descendantsOfType("class_body")[0];
-        classBodyNode
-          .descendantsOfType("constructor_declaration")
-          .forEach((constructorNode) => {
-            const constructorObj = {
-              name: "",
-              class: classObj.name,
-              parameters: "",
-            };
-            let params = "";
-            constructorNode
-              .descendantsOfType("formal_parameters")[0]
-              .children.forEach((param) => {
-                params += param.text.concat(" ");
-              });
-            params = params.trim();
-            constructorObj.parameters = params;
-            constructorObj.name = classObj.name + params;
-            this.trieMap.add(classObj.name + ":constructors", constructorObj);
-            classObj.constructors.push(constructorObj);
-          });
-        classBodyNode
-          .descendantsOfType("method_declaration")
-          .forEach((methodNode) => {
-            if (isPublic(methodNode) && !isStatic(methodNode)) {
-              const methodObj = {
-                name: "",
-                returnType: "",
-                params: "",
-              };
-              //skip over all annotations like @Override
-              let i = 0;
-              while (
-                javaBasicAnnotationTypes.includes(
-                  methodNode.descendantsOfType("identifier")[i].text
-                )
-              ) {
-                i++;
-              }
-              methodObj.name = methodNode.descendantsOfType("identifier")[
-                i
-              ].text;
-
-              let returnType = "";
-              returnType = methodNode.descendantsOfType("type_identifier")[0]
-                ? methodNode.descendantsOfType("type_identifier")[0].text
-                : returnType;
-              returnType = methodNode.descendantsOfType("integral_type")[0]
-                ? methodNode.descendantsOfType("integral_type")[0].children[0]
-                    .text
-                : returnType;
-              returnType = methodNode.descendantsOfType("boolean_type")[0]
-                ? methodNode.descendantsOfType("boolean_type")[0].text
-                : returnType;
-              methodObj.returnType = returnType;
-              let params = "";
-              methodNode
-                .descendantsOfType("formal_parameters")[0]
-                .children.forEach((param) => {
-                  params += param.text.concat(" ");
-                });
-              methodObj.params = params;
-              methodObj.name += methodObj.params; //keeping parameters in the name ensures each method has a unique key in the trie.
-              classObj.methods.push(methodObj);
-              this.trieMap.add(classObj.name + ":methods", methodObj);
-            }
-          });
+        classObj.constructors = processConstructors({
+          classBodyNode,
+          className: classObj.name,
+        });
+        classObj.methods = processMethods({
+          classBodyNode,
+          className: classObj.name,
+        });
         this.trieMap.add("class", classObj);
       }
     });
